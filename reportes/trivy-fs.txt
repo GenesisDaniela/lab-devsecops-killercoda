@@ -1,0 +1,33 @@
+
+Report Summary
+
+┌───────────────────┬──────┬─────────────────┐
+│      Target       │ Type │ Vulnerabilities │
+├───────────────────┼──────┼─────────────────┤
+│ package-lock.json │ npm  │        4        │
+└───────────────────┴──────┴─────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+package-lock.json (npm)
+=======================
+Total: 4 (HIGH: 4, CRITICAL: 0)
+
+┌─────────┬────────────────┬──────────┬────────┬───────────────────┬───────────────┬──────────────────────────────────────────────────────────────┐
+│ Library │ Vulnerability  │ Severity │ Status │ Installed Version │ Fixed Version │                            Title                             │
+├─────────┼────────────────┼──────────┼────────┼───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ lodash  │ CVE-2020-8203  │ HIGH     │ fixed  │ 4.17.15           │ 4.17.19       │ nodejs-lodash: prototype pollution in zipObjectDeep function │
+│         │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2020-8203                    │
+│         ├────────────────┤          │        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ CVE-2021-23337 │          │        │                   │ 4.17.21       │ nodejs-lodash: command injection via template                │
+│         │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2021-23337                   │
+│         ├────────────────┤          │        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ CVE-2026-4800  │          │        │                   │ 4.18.0        │ lodash: lodash: Arbitrary code execution via untrusted input │
+│         │                │          │        │                   │               │ in template imports                                          │
+│         │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-4800                    │
+│         ├────────────────┤          │        │                   ├───────────────┼──────────────────────────────────────────────────────────────┤
+│         │ NSWG-ECO-516   │          │        │                   │ >=4.17.19     │ Allocation of Resources Without Limits or Throttling         │
+│         │                │          │        │                   │               │ https://www.npmjs.com/advisories/1523                        │
+└─────────┴────────────────┴──────────┴────────┴───────────────────┴───────────────┴──────────────────────────────────────────────────────────────┘

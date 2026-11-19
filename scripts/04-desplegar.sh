@@ -18,4 +18,4 @@ kubectl -n tareas get pods,svc -o wide
 echo
 echo "Prueba local:"
 curl -s http://localhost:30080/api/health; echo
-echo "Abre el puerto 30080 desde Traffic/Ports de Killercoda para ver el tablero."
+echo "Tablero: http://localhost:30080  (en Killercoda, Traffic/Ports → 30080)."

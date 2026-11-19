@@ -5,13 +5,21 @@ cd "$(dirname "$0")/.."
 
 SONAR_URL="http://localhost:9000"
 NEW_PASS="${SONAR_PASS:-DevOps2026!lab}"
+RED="lab-devsecops"
+
+# Red propia: el scanner llega a SonarQube por nombre de contenedor, así el
+# script funciona igual en macOS (donde --network host no sirve) y en Linux.
+docker network inspect "$RED" >/dev/null 2>&1 || docker network create "$RED" >/dev/null
 
 if ! docker ps --format '{{.Names}}' | grep -qx sonarqube; then
   echo "==> Iniciando SonarQube (la primera vez tarda 2–3 minutos)"
   docker rm -f sonarqube >/dev/null 2>&1 || true
-  docker run -d --name sonarqube -p 9000:9000 \
+  docker run -d --name sonarqube --network "$RED" -p 9000:9000 \
     -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true \
     sonarqube:10.7-community >/dev/null
+else
+  # Contenedor ya existente (p. ej. arrancado antes sin la red): lo conecta.
+  docker network connect "$RED" sonarqube >/dev/null 2>&1 || true
 fi
 
 echo -n "==> Esperando a que SonarQube esté UP "
@@ -35,12 +43,13 @@ TOKEN=$(curl -s -u "admin:${NEW_PASS}" -X POST \
 echo "$TOKEN" > .sonar-token
 
 echo "==> Ejecutando sonar-scanner sobre el proyecto"
-docker run --rm --network host \
+docker run --rm --network "$RED" \
   -v "$(pwd):/usr/src" \
-  -e SONAR_HOST_URL="${SONAR_URL}" \
+  -e SONAR_HOST_URL="http://sonarqube:9000" \
   -e SONAR_TOKEN="${TOKEN}" \
   sonarsource/sonar-scanner-cli:11
 
 echo
 echo "Análisis enviado. Usuario: admin  Contraseña: ${NEW_PASS}"
-echo "Abre el puerto 9000 desde el menú Traffic/Ports de Killercoda → proyecto 'tasks-app'."
+echo "Interfaz: http://localhost:9000 → proyecto 'tasks-app'"
+echo "(en Killercoda, ábrelo desde el menú Traffic/Ports)."

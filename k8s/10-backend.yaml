@@ -18,6 +18,10 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        # UID/GID numéricos del usuario "node" de la imagen: kubelet no puede
+        # validar runAsNonRoot con un usuario no numérico (USER node).
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
         - name: backend
           image: tasks-backend:1.0.0
