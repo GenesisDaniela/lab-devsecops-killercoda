@@ -1,0 +1,14 @@
+# Dependencias instaladas por npm
+node_modules/
+
+# Credenciales del laboratorio (token de análisis de SonarQube)
+.sonar-token
+
+reportes/*.txt
+
+# Logs y temporales
+*.log
+npm-debug.log*
+
+# macOS
+.DS_Store
