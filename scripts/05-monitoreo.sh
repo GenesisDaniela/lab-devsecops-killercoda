@@ -14,5 +14,5 @@ for i in $(seq 1 60); do
 done
 
 echo
-echo "Prometheus → puerto 30090   (consulta: sum by (status) (rate(http_requests_total[1m])))"
-echo "Grafana    → puerto 30300   (admin / devops2026)"
+echo "Prometheus → http://localhost:30090   (consulta: sum by (status) (rate(http_requests_total[1m])))"
+echo "Grafana    → http://localhost:30300   (admin / devops2026)"

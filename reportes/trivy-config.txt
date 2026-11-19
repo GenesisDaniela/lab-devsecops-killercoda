@@ -1,0 +1,264 @@
+
+Report Summary
+
+┌────────────────────────────────────────┬────────────┬───────────────────┐
+│                 Target                 │    Type    │ Misconfigurations │
+├────────────────────────────────────────┼────────────┼───────────────────┤
+│ backend/Dockerfile                     │ dockerfile │         0         │
+├────────────────────────────────────────┼────────────┼───────────────────┤
+│ frontend/Dockerfile                    │ dockerfile │         1         │
+├────────────────────────────────────────┼────────────┼───────────────────┤
+│ k8s/00-namespace.yaml                  │ kubernetes │         0         │
+├────────────────────────────────────────┼────────────┼───────────────────┤
+│ k8s/10-backend.yaml                    │ kubernetes │         1         │
+├────────────────────────────────────────┼────────────┼───────────────────┤
+│ k8s/20-frontend.yaml                   │ kubernetes │         3         │
+├────────────────────────────────────────┼────────────┼───────────────────┤
+│ k8s/monitoring/prometheus-grafana.yaml │ kubernetes │         6         │
+└────────────────────────────────────────┴────────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+frontend/Dockerfile (dockerfile)
+================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds-0002
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+k8s/10-backend.yaml (kubernetes)
+================================
+Tests: 35 (SUCCESSES: 34, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+KSV-0014 (HIGH): Container 'backend' of Deployment 'backend' should set 'securityContext.readOnlyRootFilesystem' to true
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv-0014
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/10-backend.yaml:26-44
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  26 ┌         - name: backend
+  27 │           image: tasks-backend:1.0.0
+  28 │           imagePullPolicy: IfNotPresent
+  29 │           ports:
+  30 │             - containerPort: 3000
+  31 │           env:
+  32 │             - name: APP_VERSION
+  33 │               value: "1.0.0"
+  34 └           resources:
+  ..   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+k8s/20-frontend.yaml (kubernetes)
+=================================
+Tests: 37 (SUCCESSES: 34, FAILURES: 3)
+Failures: 3 (HIGH: 3, CRITICAL: 0)
+
+KSV-0014 (HIGH): Container 'frontend' of Deployment 'frontend' should set 'securityContext.readOnlyRootFilesystem' to true
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv-0014
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/20-frontend.yaml:16-27
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  16 ┌         - name: frontend
+  17 │           image: tasks-frontend:1.0.0
+  18 │           imagePullPolicy: IfNotPresent
+  19 │           ports:
+  20 │             - containerPort: 8080
+  21 │           resources:
+  22 │             requests: { cpu: 25m, memory: 32Mi }
+  23 │             limits:   { cpu: 200m, memory: 64Mi }
+  24 └           readinessProbe:
+  ..   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+KSV-0118 (HIGH): container frontend in tareas namespace is using the default security context
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv-0118
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/20-frontend.yaml:16-27
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  16 ┌         - name: frontend
+  17 │           image: tasks-frontend:1.0.0
+  18 │           imagePullPolicy: IfNotPresent
+  19 │           ports:
+  20 │             - containerPort: 8080
+  21 │           resources:
+  22 │             requests: { cpu: 25m, memory: 32Mi }
+  23 │             limits:   { cpu: 200m, memory: 64Mi }
+  24 └           readinessProbe:
+  ..   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+KSV-0118 (HIGH): deployment frontend in tareas namespace is using the default security context, which allows root privileges
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv-0118
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/20-frontend.yaml:14-27
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  14 ┌     spec:
+  15 │       containers:
+  16 │         - name: frontend
+  17 │           image: tasks-frontend:1.0.0
+  18 │           imagePullPolicy: IfNotPresent
+  19 │           ports:
+  20 │             - containerPort: 8080
+  21 │           resources:
+  22 └             requests: { cpu: 25m, memory: 32Mi }
+  ..   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+k8s/monitoring/prometheus-grafana.yaml (kubernetes)
+===================================================
+Tests: 40 (SUCCESSES: 34, FAILURES: 6)
+Failures: 6 (HIGH: 6, CRITICAL: 0)
+
+KSV-0014 (HIGH): Container 'grafana' of Deployment 'grafana' should set 'securityContext.readOnlyRootFilesystem' to true
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv-0014
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/monitoring/prometheus-grafana.yaml:162-178
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 162 ┌         - name: grafana
+ 163 │           image: grafana/grafana:11.1.0
+ 164 │           env:
+ 165 │             - name: GF_SECURITY_ADMIN_USER
+ 166 │               value: admin
+ 167 │             - name: GF_SECURITY_ADMIN_PASSWORD
+ 168 │               value: devops2026
+ 169 │             - name: GF_SECURITY_ALLOW_EMBEDDING
+ 170 └               value: "true"
+ ...   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+KSV-0014 (HIGH): Container 'prometheus' of Deployment 'prometheus' should set 'securityContext.readOnlyRootFilesystem' to true
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv-0014
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/monitoring/prometheus-grafana.yaml:102-114
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 102 ┌         - name: prometheus
+ 103 │           image: prom/prometheus:v2.53.0
+ 104 │           args:
+ 105 │             - --config.file=/etc/prometheus/prometheus.yml
+ 106 │             - --storage.tsdb.retention.time=6h
+ 107 │           ports:
+ 108 │             - containerPort: 9090
+ 109 │           resources:
+ 110 └             requests: { cpu: 50m, memory: 128Mi }
+ ...   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+KSV-0118 (HIGH): container grafana in monitoreo namespace is using the default security context
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv-0118
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/monitoring/prometheus-grafana.yaml:162-178
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 162 ┌         - name: grafana
+ 163 │           image: grafana/grafana:11.1.0
+ 164 │           env:
+ 165 │             - name: GF_SECURITY_ADMIN_USER
+ 166 │               value: admin
+ 167 │             - name: GF_SECURITY_ADMIN_PASSWORD
+ 168 │               value: devops2026
+ 169 │             - name: GF_SECURITY_ALLOW_EMBEDDING
+ 170 └               value: "true"
+ ...   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+KSV-0118 (HIGH): container prometheus in monitoreo namespace is using the default security context
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv-0118
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/monitoring/prometheus-grafana.yaml:102-114
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 102 ┌         - name: prometheus
+ 103 │           image: prom/prometheus:v2.53.0
+ 104 │           args:
+ 105 │             - --config.file=/etc/prometheus/prometheus.yml
+ 106 │             - --storage.tsdb.retention.time=6h
+ 107 │           ports:
+ 108 │             - containerPort: 9090
+ 109 │           resources:
+ 110 └             requests: { cpu: 50m, memory: 128Mi }
+ ...   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+KSV-0118 (HIGH): deployment grafana in monitoreo namespace is using the default security context, which allows root privileges
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv-0118
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/monitoring/prometheus-grafana.yaml:160-182
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 160 ┌     spec:
+ 161 │       containers:
+ 162 │         - name: grafana
+ 163 │           image: grafana/grafana:11.1.0
+ 164 │           env:
+ 165 │             - name: GF_SECURITY_ADMIN_USER
+ 166 │               value: admin
+ 167 │             - name: GF_SECURITY_ADMIN_PASSWORD
+ 168 └               value: devops2026
+ ...   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+KSV-0118 (HIGH): deployment prometheus in monitoreo namespace is using the default security context, which allows root privileges
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv-0118
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ k8s/monitoring/prometheus-grafana.yaml:99-118
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  99 ┌     spec:
+ 100 │       serviceAccountName: prometheus
+ 101 │       containers:
+ 102 │         - name: prometheus
+ 103 │           image: prom/prometheus:v2.53.0
+ 104 │           args:
+ 105 │             - --config.file=/etc/prometheus/prometheus.yml
+ 106 │             - --storage.tsdb.retention.time=6h
+ 107 └           ports:
+ ...   
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
